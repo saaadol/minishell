@@ -6,7 +6,8 @@
 #include "get_next_line.h"
 #include <readline/history.h>
 #include <dirent.h>
-
+#include <sys/types.h>
+# include <fcntl.h>
 
 
 
@@ -28,5 +29,17 @@ char    *ft_strcpy(char *s1, char *s2);
 int	ft_strncmp(char *s1, char *s2, size_t n);
 void print_nodes(t_list *arg);
 int is_special_char(char x);
+void	executing_funcs(int ac, char **av, char *envp[]);
+void exec_command(char *envp[], char **command, char *x, int ac, char **av);
+pid_t child_fork_heredoc_1(int ac, char **av, char *envp[], int **pips);
+pid_t child_fork_heredoc_2(int ac, char **av, char *envp[], int **pips);
+void freeying_pips(int **pips);
+void	executing_func(int ac,char **av, char *envp[], int **pips);
+void heredoc_(int ac, char **av, char *envp[]);
+char	*checking_path(char *envp[], char *comm);
+void	while_pipe(int **pips);
+char	*ft_newstrchr(char *s, char *target);
+int sep_len(char **str);
+
 
 #endif

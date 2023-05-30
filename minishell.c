@@ -6,7 +6,7 @@
 /*   By: souledla <souledla@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/20 16:27:48 by souledla          #+#    #+#             */
-/*   Updated: 2023/05/24 10:43:11 by souledla         ###   ########.fr       */
+/*   Updated: 2023/05/28 18:07:02 by souledla         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,10 +265,10 @@ void  displaying_prompt(t_list *arg)
 
 
 
-int main(int ac, char **av, char *env[])
-{
-	t_list *arg = NULL;
-	displaying_prompt(arg);
-}
+// int main(int ac, char **av, char *env[])
+// {
+// 	t_list *arg = NULL;
+// 	displaying_prompt(arg);
+// }
 
 
