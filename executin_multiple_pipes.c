@@ -80,33 +80,42 @@ pid_t	bonus_child_fork_2(int *arr, char **av, char *envp[], int **array)
 	return (f2);
 }
 
-int	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *command)
+void	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *command, int *fd )
 {
 	pid_t	fn;
 	int		i;
-	int j  = 0;
-	char **splited_command = NULL;
-	i = 0;
+	static int j  = 0;
 	
-	while (i < sep_len(av))
+	char **splited_command = NULL;
+	splited_command = ft_split(command, ' ');
+	i = 0;
+	fn = fork();
+	if (fn == 0)
 	{
-		fn = fork();
-		if (fn == 0)
+		if (j != 0)
 		{
-			splited_command = ft_split(command, ' ');
-			dup2(array[j][0], 0);
-			dup2(array[j + 1][1], 1);
-			while (i < sep_len(av))
-			{
-				close(array[i][0]);
-				close(array[i][1]);
-				i++;
-			}
-			exec_function(envp, splited_command, splited_command[0]);
+			dup2(array[j - 1][0], 0);
+			dup2(array[j][1], 1);
 		}
-		j++;
+		else
+		{
+			dup2(array[j][0], 0);
+			dup2(array[j][1], 1);
+		} 	
+
+		while (i < sep_len(av))
+		{
+			close(array[i][0]);
+			close(array[i][1]);
+			i++;
+		}
+		exec_function(envp, splited_command, splited_command[0]);
+		execve(checking_path(envp, splited_command[0]), splited_command, envp);
 	}
-	return (fn);
+	*fd = j;
+	j++;
+	//waitpid(fn, NULL, 0);
+	// return (fn);
 }
 void	closing_pipes(int ac, int **array)
 {
@@ -120,58 +129,61 @@ void	closing_pipes(int ac, int **array)
 		i++;
 	}
 }
-pid_t	bonus_child_fork_1(int ac, char **av, char *envp[], int **array, char *command)
+void	bonus_child_fork_1(int ac, char **av, char *envp[], int **array, char *command, int fd_)
 {
 	pid_t	f1 = 0;
-	int		fd1;
-	// char	**command;
-	char **splited_command;
+
+	char **splited_command = NULL;
 	int		i;
 	i = 0 ;
 	int fd[2];
 	splited_command = ft_split(command, ' ');
-	while (splited_command[i])
-	{
-		i++;
-	}
 	
-	if (i == 1)
-	{
-		execve(checking_path(envp, splited_command[0]), splited_command, envp);
-		exec_function(envp, splited_command, splited_command[0]);
-	}
-	else
-	
+	f1 = fork();
+	if (f1 == 0)
 	{	
-		f1 = fork();
-		if (f1 == 0)
-		{	
-			// fd1 = open(av[1], O_RDONLY, 0777);
-			// command = ft_split(av[2], ' ');
-			// if (dup2(fd1, 0) == -1)
-			// {
-			// 	perror(av[1]);
-			// 	exit(1);
-			// }
-			// close(fd1);
-			if (dup2(array[0][1], 1) == -1)
+		// fd1 = open(av[1], O_RDONLY, 0777);
+		// command = ft_split(av[2], ' ');
+		// if (dup2(fd1, 0) == -1)
+		// {
+		// 	perror(av[1]);
+		// 	exit(1);
+		// }
+		// close(fd1);
+		if (fd_  != -1)
+		{
+
+			if (fd_ == 0)
+			{
+				if (dup2(array[0][0], 0) == -1)
+				perror("Pipe:");	
+			}
+			if (dup2(array[fd_ ][0], 0) == -1)
 				perror("Pipe:");
-			// closing_pipes(ac, array);
-			execve(checking_path(envp, splited_command[0]), splited_command, envp);
-			exec_function(envp, splited_command, splited_command[0]);
+			
+
 		}
-		
+			while (i < sep_len(av))
+			{
+				close(array[i][0]);
+				close(array[i][1]);
+				i++;
+			}
+		exec_function(envp, splited_command, splited_command[0]);
+		execve(checking_path(envp, splited_command[0]), splited_command, envp);
 	}
+		
+
 	i = 0;
-	while (array[i])
+	while (i < sep_len(av))
 	{
 		close(array[i][0]);
 		close(array[i][1]);
 		i++;
 	}
 	   
-	waitpid(f1, NULL, 0);                                                                                                                                                                                                                                                                                      
-	return (f1);
+	while (waitpid(f1, NULL, 0) != -1){}                                                                                                                                                                                                                                                                                      
+	//return (f1);
 }
 
 int	**handling_multiple_pipes(char **av)
@@ -248,6 +260,7 @@ void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *a
 	int j = 0;
 	int sep_count = sep_len(av);
 	int flag = 1;
+	int fd_ = -1;
 	if (!sep_count)
 		flag = 0;
 	while (av[i]) 
@@ -268,8 +281,10 @@ void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *a
 		{
 			if (joined)
 			{
-				bonus_child_fork_1(ac, av, envp, array, command);
+				command = ft_strdup(joined);
+				bonus_child_fork_1(ac, av, envp, array, command, fd_);
 				free(joined);
+				free(command);
 				joined = NULL;
 			}
 		} 
@@ -282,14 +297,8 @@ void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *a
                 joined = NULL;
             }
             // execute func
-			if (flag == 1)
-			{			
-				while_loop_fork(arr, av, envp, array, command);
-			}
-			else
-			{
-				bonus_child_fork_1(ac, av, envp, array, command);
-			}
+			
+			while_loop_fork(arr, av, envp, array, command, &fd_);			
             free(command);
             command = NULL;
             joined = NULL;
@@ -325,7 +334,7 @@ int	main(int ac, char **av, char *envp[])
 	 //fn = while_loop_fork(arr, av, envp, array);
 	// f2 = bonus_child_fork_2(arr, av, envp, array);
 	// closing_pipes(ac, array);
-	waitpid(fn, NULL, 0);
+	//waitpid(fn, NULL, 0);
 	
 	
 }
