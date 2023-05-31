@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
+
 void	print_error(void)
 {
 	perror("nice try ;D");
@@ -32,7 +33,7 @@ void	exec_function(char *envp[], char **command, char *x)
 			if (execve(command[0], command, envp) == -1)
 			{
 				
-				perror(x);
+				//perror("lol");
 				exit(1);
 			}	
 		}
@@ -40,47 +41,17 @@ void	exec_function(char *envp[], char **command, char *x)
 	if (execve(checking_path(envp, command[0]), command, envp) == -1)
 	{	
 		close(fd);
-		perror(x);
+		//perror("lol");
 		exit(1);
 	}
 }
 
-void	waiting_pid(pid_t f1, pid_t fn, pid_t f2)
-{
-	waitpid(f1, NULL, 0);
-	waitpid(fn, NULL, 0);
-	waitpid(f2, NULL, 0);
-}
 
 
-pid_t	bonus_child_fork_2(int *arr, char **av, char *envp[], int **array)
-{
-	pid_t	f2;
-	int		fd2;
-	int		i;
-	char	**command;
 
-	f2 = fork();
-	if (f2 == 0)
-	{
-		fd2 = open(av[arr[0] -1], O_CREAT | O_TRUNC | O_WRONLY, 0777);
-		command = ft_split(av[arr[0] - 2], ' ');
-		dup2(fd2, 1);
-		close(fd2);
-		dup2(array[arr[1]][0], 0);
-		i = 0;
-		while (i < arr[0] - 4)
-		{
-			close(array[i][0]);
-			close(array[i][1]);
-			i++;
-		}
-		exec_function(envp, command, av[arr[0] - 2]);
-	}
-	return (f2);
-}
 
-void	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *command, int *fd )
+
+pid_t	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *command, int *fd, pid_t *array_of_pids)
 {
 	pid_t	fn;
 	int		i;
@@ -99,8 +70,8 @@ void	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *comma
 		}
 		else
 		{
-			dup2(array[j][0], 0);
-			dup2(array[j][1], 1);
+			//dup2(array[j][0], 0);
+			dup2(array[0][1], 1);
 		} 	
 
 		while (i < sep_len(av))
@@ -109,60 +80,43 @@ void	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *comma
 			close(array[i][1]);
 			i++;
 		}
+		//execve(checking_path(envp, splited_command[0]), splited_command, envp);
 		exec_function(envp, splited_command, splited_command[0]);
-		execve(checking_path(envp, splited_command[0]), splited_command, envp);
+		
 	}
+	array_of_pids[j] = fn;
 	*fd = j;
 	j++;
+	i = 0;
+	while (splited_command[i])
+	{
+		free(splited_command[i++]);
+	}
+	free(splited_command);
+	return fn;
 	//waitpid(fn, NULL, 0);
 	// return (fn);
 }
-void	closing_pipes(int ac, int **array)
-{
-	int	i;
 
-	i = 0;
-	while (i < ac - 2)
-	{
-		close(array[i][0]);
-		close(array[i][1]);
-		i++;
-	}
-}
-void	bonus_child_fork_1(int ac, char **av, char *envp[], int **array, char *command, int fd_)
+pid_t	bonus_child_fork_1(int ac, char **av, char *envp[], int **array, char *command, int fd_)
 {
-	pid_t	f1 = 0;
+	pid_t	f1;
 
 	char **splited_command = NULL;
 	int		i;
 	i = 0 ;
-	int fd[2];
 	splited_command = ft_split(command, ' ');
-	
 	f1 = fork();
 	if (f1 == 0)
 	{	
-		// fd1 = open(av[1], O_RDONLY, 0777);
-		// command = ft_split(av[2], ' ');
-		// if (dup2(fd1, 0) == -1)
-		// {
-		// 	perror(av[1]);
-		// 	exit(1);
-		// }
-		// close(fd1);
+		
 		if (fd_  != -1)
 		{
-
-			if (fd_ == 0)
-			{
-				if (dup2(array[0][0], 0) == -1)
-				perror("Pipe:");	
-			}
-			if (dup2(array[fd_ ][0], 0) == -1)
-				perror("Pipe:");
-			
-
+			dup2(array[fd_][0], 0);
 		}
+		else
+			dup2(array[0][0], 0);
+
 			while (i < sep_len(av))
 			{
 				close(array[i][0]);
@@ -170,20 +124,17 @@ void	bonus_child_fork_1(int ac, char **av, char *envp[], int **array, char *comm
 				i++;
 			}
 		exec_function(envp, splited_command, splited_command[0]);
-		execve(checking_path(envp, splited_command[0]), splited_command, envp);
+		//execve(checking_path(envp, splited_command[0]), splited_command, envp);
 	}
-		
 
 	i = 0;
-	while (i < sep_len(av))
+	while (splited_command[i])
 	{
-		close(array[i][0]);
-		close(array[i][1]);
-		i++;
+		free(splited_command[i++]);
 	}
-	   
-	while (waitpid(f1, NULL, 0) != -1){}                                                                                                                                                                                                                                                                                      
-	//return (f1);
+	free(splited_command);
+	                                                                                                                                                                                                                                                                                      
+	return (f1);
 }
 
 int	**handling_multiple_pipes(char **av)
@@ -215,7 +166,6 @@ void freeying_command_array(char **command)
 	{
 		free(command[i++]);
 	}
-	//free(command);
 }
 int sep_len(char **str)
 {
@@ -232,45 +182,35 @@ int sep_len(char **str)
 	return counter; 
 }
 
-int calcul_arg(char **str)
+pid_t *creating_array_of_fds(char **av)
 {
-	
-	static int i = 1;
-	int counter = 0;
-	while(str[i])
-	{	
-		if (str[i][0] == '|' && ft_strlen(str[i]) != 1)
-		{
-			i++;
-			return counter;	
-		}
-		counter++;
-		i++;
-	}
-	return counter; 
-}
+	pid_t *array = malloc(sizeof(pid_t ) * sep_len(av));
 
+	return array;
+}
 
 void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *arr)
 {
 	char *command = NULL;
-	
+	pid_t *array_of_pids = creating_array_of_fds(av);
 	char *joined = NULL;
 	int i = 1;
 	int j = 0;
 	int sep_count = sep_len(av);
 	int flag = 1;
 	int fd_ = -1;
+	pid_t fd1;
+	pid_t fd2;
 	if (!sep_count)
 		flag = 0;
 	while (av[i]) 
 	{
-        if (av[i][0] != '|' && ft_strlen(av[i]) != 1) 
+        if (av[i][0] != '|' || av[i][0] != '<'  || av[i][0] != '>') 
 		{
             if (joined == NULL) 
 			{
                 joined = ft_strdup(av[i]);
-            } 
+            }
 			else 
 			{
                 joined = ft_strjoin(joined, " ");
@@ -282,14 +222,20 @@ void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *a
 			if (joined)
 			{
 				command = ft_strdup(joined);
-				bonus_child_fork_1(ac, av, envp, array, command, fd_);
+				fd1 = bonus_child_fork_1(ac, av, envp, array, command, fd_);
 				free(joined);
 				free(command);
+				command = NULL;
 				joined = NULL;
 			}
 		} 
-		else if ((av[i][0] == '|' && ft_strlen(av[i]) == 1)) 
+		else if (av[i][0] == '|') 
 		{
+			if (av[i][1] == '|')
+			{
+				printf("syntax error");
+				exit(1);
+			}
             command = ft_strdup(joined);
             if (joined != NULL) 
 			{
@@ -298,14 +244,32 @@ void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *a
             }
             // execute func
 			
-			while_loop_fork(arr, av, envp, array, command, &fd_);			
+			fd2 = while_loop_fork(arr, av, envp, array, command, &fd_, array_of_pids);			
             free(command);
             command = NULL;
             joined = NULL;
         }
+		else if (av[i][0] == '<') 
+		{
+			
+        }
         i++;
     }
-	 
+	i = 0;
+	while (i < sep_len(av))
+	{
+		close(array[i][0]);
+		close(array[i][1]);
+		i++;
+	}
+	i = 0;
+	while (i < sep_len(av))
+	{
+		waitpid(array_of_pids[i], NULL, 0);
+		i++;
+	}
+	waitpid(fd1, NULL, 0);
+	free(array_of_pids);
 }
 		
 
@@ -330,6 +294,7 @@ int	main(int ac, char **av, char *envp[])
 			exit(1);
 	}
 	checking_if_pipe_exists(ac, av,envp, array, arr);
+	
 	// f1 = bonus_child_fork_1(ac, av, envp, array);
 	 //fn = while_loop_fork(arr, av, envp, array);
 	// f2 = bonus_child_fork_2(arr, av, envp, array);

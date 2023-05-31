@@ -20,7 +20,7 @@
 # include <sys/wait.h>
 # include <stdlib.h>
 # include "get_next_line.h"
-
+#include "minishell.h"
 char	**freeing_memory(char **str, size_t j);
 char	**ft_split(char const *s, char c);
 int		ft_strlen(char *str);
@@ -28,7 +28,7 @@ char	*ft_newstrchr(char *s, char *target);
 char	*checking_path(char *envp[], char *comm);
 int		ft_strncmp(char *s1, char *s2, size_t n);
 char	*ft_join(char *s1, char *s2);
-void	exec_function(char *envp[], char **command, char *x);
+//void	exec_function(char *envp[], char **command, char *x);
 int		child_fork1(char **av, char *envp[], int *pips);
 int		child_fork2(char **av, char *envp[], int *pips);
 int		**handling_multiple_pipes(int ac);

@@ -40,6 +40,8 @@ char	*checking_path(char *envp[], char *comm);
 void	while_pipe(int **pips);
 char	*ft_newstrchr(char *s, char *target);
 int sep_len(char **str);
+void	exec_function(char *envp[], char **command, char *x);
+pid_t	bonus_child_fork_1(int ac, char **av, char *envp[], int **array, char *command, int fd_);
 
 
 #endif

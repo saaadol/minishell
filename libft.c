@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "pipex.h"
+
 #include "minishell.h"
 
 static size_t	counting_words(char const *s, char c)
