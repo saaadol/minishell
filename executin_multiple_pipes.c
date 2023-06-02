@@ -33,7 +33,7 @@ void	exec_function(char *envp[], char **command, char *x)
 			if (execve(command[0], command, envp) == -1)
 			{
 				
-				//perror("lol");
+				perror(x);
 				exit(1);
 			}	
 		}
@@ -41,7 +41,7 @@ void	exec_function(char *envp[], char **command, char *x)
 	if (execve(checking_path(envp, command[0]), command, envp) == -1)
 	{	
 		close(fd);
-		//perror("lol");
+		perror(x);
 		exit(1);
 	}
 }
@@ -51,14 +51,14 @@ void	exec_function(char *envp[], char **command, char *x)
 
 
 
-pid_t	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *command, int *fd, pid_t *array_of_pids)
+pid_t	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *command, int *fd, pid_t *array_of_pids, int infile)
 {
 	pid_t	fn;
 	int		i;
 	static int j  = 0;
-	
 	char **splited_command = NULL;
 	splited_command = ft_split(command, ' ');
+
 	i = 0;
 	fn = fork();
 	if (fn == 0)
@@ -70,7 +70,10 @@ pid_t	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *comm
 		}
 		else
 		{
-			//dup2(array[j][0], 0);
+			if (infile != -99)
+				dup2(infile, 0);
+			else
+				dup2(array[0][0], 0);
 			dup2(array[0][1], 1);
 		} 	
 
@@ -98,7 +101,7 @@ pid_t	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *comm
 	// return (fn);
 }
 
-pid_t	bonus_child_fork_1(int ac, char **av, char *envp[], int **array, char *command, int fd_)
+pid_t	bonus_child_fork_1(int ac, char **av, char *envp[], int **array, char *command, int fd_, int infile)
 {
 	pid_t	f1;
 
@@ -106,16 +109,23 @@ pid_t	bonus_child_fork_1(int ac, char **av, char *envp[], int **array, char *com
 	int		i;
 	i = 0 ;
 	splited_command = ft_split(command, ' ');
+
+	//printf("%s", splited_command[0]);
+
+	// printf("%s", splited_command[0]);
 	f1 = fork();
 	if (f1 == 0)
 	{	
-		
+		if (infile != -99)
+		{
+			dup2(infile, 0);
+			close(infile);
+		}	
 		if (fd_  != -1)
 		{
 			dup2(array[fd_][0], 0);
 		}
-		else
-			dup2(array[0][0], 0);
+
 
 			while (i < sep_len(av))
 			{
@@ -189,8 +199,21 @@ pid_t *creating_array_of_fds(char **av)
 	return array;
 }
 
+
+int redirection_in_fork(char **av, char **envp, int index)
+{
+	int fd;
+	fd = open(av[index + 1], O_RDONLY, 0777);
+	if (fd == -1)
+	{
+		perror(av[index + 1]);
+		exit(1);
+	}
+	return fd;
+}
 void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *arr)
 {
+	int redirection_in_flag = 0;
 	char *command = NULL;
 	pid_t *array_of_pids = creating_array_of_fds(av);
 	char *joined = NULL;
@@ -199,17 +222,24 @@ void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *a
 	int sep_count = sep_len(av);
 	int flag = 1;
 	int fd_ = -1;
+	int infile = -1;
 	pid_t fd1;
 	pid_t fd2;
 	if (!sep_count)
 		flag = 0;
 	while (av[i]) 
-	{
-        if (av[i][0] != '|' || av[i][0] != '<'  || av[i][0] != '>') 
+	{		
+		if (av[i][0] == '<')
 		{
+			redirection_in_flag = 1;
+			infile = redirection_in_fork(av, envp, i);
+			i++;
+		}
+       	else if (av[i][0] != '|') 
+		{				
             if (joined == NULL) 
 			{
-                joined = ft_strdup(av[i]);
+					joined = ft_strdup(av[i]);
             }
 			else 
 			{
@@ -222,7 +252,10 @@ void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *a
 			if (joined)
 			{
 				command = ft_strdup(joined);
-				fd1 = bonus_child_fork_1(ac, av, envp, array, command, fd_);
+				if (redirection_in_flag == 1)
+					fd1 = bonus_child_fork_1(ac, av, envp, array, command, fd_, infile);
+				else
+					fd1 = bonus_child_fork_1(ac, av, envp, array, command, fd_, -99);
 				free(joined);
 				free(command);
 				command = NULL;
@@ -231,11 +264,6 @@ void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *a
 		} 
 		else if (av[i][0] == '|') 
 		{
-			if (av[i][1] == '|')
-			{
-				printf("syntax error");
-				exit(1);
-			}
             command = ft_strdup(joined);
             if (joined != NULL) 
 			{
@@ -243,16 +271,20 @@ void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *a
                 joined = NULL;
             }
             // execute func
-			
-			fd2 = while_loop_fork(arr, av, envp, array, command, &fd_, array_of_pids);			
+			if (redirection_in_flag == 1)
+			{
+				fd2 = while_loop_fork(arr, av, envp, array, command, &fd_, array_of_pids, infile);
+			}
+			else
+				fd2 = while_loop_fork(arr, av, envp, array, command, &fd_, array_of_pids, -99);
             free(command);
             command = NULL;
             joined = NULL;
         }
-		else if (av[i][0] == '<') 
-		{
+		// else if (av[i][0] == '<') 
+		// {
 			
-        }
+        // }
         i++;
     }
 	i = 0;
