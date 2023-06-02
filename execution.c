@@ -207,32 +207,32 @@ void	executing_func(int ac,char **av, char *envp[], int **pips)
 	waitpid(pid, NULL, 0);
 	waitpid(pid2, NULL, 0);
 }
-void heredoc_(int ac, char **av, char *envp[])
-{
-	int **pips;                        
-	int i = 0;
-	char *buffer;
-	pips = malloc(sizeof(int *) * 2);
-	while (i < 2)
-		pips[i++] = malloc(sizeof(int) * 2);
-	while_pipe(pips);
-	while (1)
-	{
-		write(1, "heredoc>", 8);
-		buffer = readline(0);
-		if (!ft_strncmp(buffer, av[2], ft_strlen(av[1])))
-		{
-			free(buffer);
-			break;
-		}
-		write(pips[0][1], buffer, ft_strlen(buffer));
-		free(buffer);
+// void heredoc_(int ac, char **av, char *envp[])
+// {
+// 	int **pips;                        
+// 	int i = 0;
+// 	char *buffer;
+// 	pips = malloc(sizeof(int *) * 2);
+// 	while (i < 2)
+// 		pips[i++] = malloc(sizeof(int) * 2);
+// 	while_pipe(pips);
+// 	while (1)
+// 	{
+// 		write(1, "heredoc>", 8);
+// 		buffer = readline(0);
+// 		if (!ft_strncmp(buffer, av[2], ft_strlen(av[1])))
+// 		{
+// 			free(buffer);
+// 			break;
+// 		}
+// 		write(pips[0][1], buffer, ft_strlen(buffer));
+// 		free(buffer);
 	
-	}
-	i = 0;
-	executing_func(ac, av, envp, pips);	
-	freeying_pips(pips);
-}
+// 	}
+// 	i = 0;
+// 	executing_func(ac, av, envp, pips);	
+// 	freeying_pips(pips);
+// }
 // int main(int ac, char **av, char *envp[])
 // {
 // 	if (!ft_strncmp(av[1], "here_doc", ft_strlen("here_doc")))
