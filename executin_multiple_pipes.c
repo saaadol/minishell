@@ -51,37 +51,44 @@ void	exec_function(char *envp[], char **command, char *x)
 
 
 
-pid_t	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *command, int *fd, pid_t *array_of_pids, int infile , int outfile)
+pid_t	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *command, int *fd, pid_t *array_of_pids, int *infile , int *outfile)
 {
 	pid_t	fn;
 	int		i;
 	static int j  = 0;
 	char **splited_command = NULL;
 	splited_command = ft_split(command, ' ');
-	
-	// printf("%d", *fd);
+	 //printf("%d", *outfile);
 	// exit(1);
 	i = 0;
+
 	fn = fork();
 	if (fn == 0)
 	{
 		if (j != 0)
 		{
-			if (infile != -99)
-				dup2(infile, 0);
+			if (*infile != -99)
+				dup2(*infile, 0);
 			else
 				dup2(array[j - 1][0], 0);
-			if (outfile != -99)
-				dup2(outfile, 1);
+			if (*outfile != -99)
+			{
+				dup2(*outfile, 1);
+				close(*outfile);
+				*outfile = -99;
+			}
 			else
 				dup2(array[j][1], 1);
 		}
 		else
 		{
-			if (infile != -99)
-				dup2(infile, 0);
-			if (outfile != -99)
-				dup2(outfile, 1);
+			if (*infile != -99)
+				dup2(*infile, 0);
+			if (*outfile != -99)
+			{
+				dup2(*outfile, 1);
+				close(*outfile);
+			}
 			else 
 				dup2(array[0][1], 1);
 			//  else
@@ -100,6 +107,9 @@ pid_t	while_loop_fork(int *arr, char **av, char *envp[], int **array, char *comm
 	}
 	array_of_pids[j] = fn;
 	*fd = j;
+	*outfile = -99;
+	*infile = -99;
+	//printf("%d", *infile);
 	j++;
 	i = 0;
 	while (splited_command[i])
@@ -121,9 +131,6 @@ pid_t	bonus_child_fork_1(int ac, char **av, char *envp[], int **array, char *com
 	i = 0 ;
 	splited_command = ft_split(command, ' ');
 	
-
-	//  printf("%s", splited_command[0]);
-	//  exit(1);
 	f1 = fork();
 	if (f1 == 0)
 	{	
@@ -145,7 +152,11 @@ pid_t	bonus_child_fork_1(int ac, char **av, char *envp[], int **array, char *com
 				close(outfile);
 			// }
 
-		}	
+		}
+		else if (infile == -99 && fd_ == -1)	
+		{
+			dup2(array[0][0], 0);
+		}
 
 		while (i < sep_len(av))
 		{
@@ -264,7 +275,7 @@ int heredoc_func(int ac, char **av, char *envp[], char *delimiter)
 	{
 		write(1, "heredoc>", 8);
 		buffer = get_next_line(0);
-		if (!ft_strncmp(buffer, delimiter, ft_strlen(delimiter)))
+		if (ft_strlen(buffer) == ft_strlen(delimiter) && !ft_strncmp(buffer, delimiter, ft_strlen(delimiter)))
 		{
 			free(buffer);
 			break;
@@ -362,7 +373,6 @@ void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *a
 		{
 			if (joined)
 			{
-				
 				command = ft_strdup(joined);
 				//printf("%s", command);
 				
@@ -371,10 +381,16 @@ void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *a
 					free(joined);
 					joined = NULL;
 				}
-				fd2 = while_loop_fork(arr, av, envp, array, command, &fd_, array_of_pids, infile, outfile);
+				fd2 = while_loop_fork(arr, av, envp, array, command, &fd_, array_of_pids, &infile, &outfile);
 				free(command);
 				command = NULL;
 				joined = NULL;
+			}
+			else
+			{
+				
+				infile = -99;
+				outfile = -99;
 			}
         }
         i++;
@@ -399,33 +415,33 @@ void checking_if_pipe_exists(int ac, char **av, char **envp, int **array, int *a
 }
 		
 
-int	main(int ac, char **av, char *envp[])
-{
-	int		**array;
-	pid_t	f1;
-	pid_t	f2;
-	pid_t	fn;
-	int		arr[4];
+// int	main(int ac, char **av, char *envp[])
+// {
+// 	int		**array;
+// 	pid_t	f1;
+// 	pid_t	f2;
+// 	pid_t	fn;
+// 	int		arr[4];
 
-	//protection(ac);
-	arr[0] = ac;
-	arr[1] = 0;
-	// if (!(ft_strncmp(av[1], "here_doc", ft_strlen("here_doc"))))
-	// 	heredoc_(ac, av, envp);
-	array = handling_multiple_pipes(av);
-	arr[2] = 0;
-	while (arr[2] < sep_len(av))
-	{
-		if (pipe(array[(arr[2])++]) == -1)
-			exit(1);
-	}
-	checking_if_pipe_exists(ac, av,envp, array, arr);
+// 	//protection(ac);
+// 	arr[0] = ac;
+// 	arr[1] = 0;
+// 	// if (!(ft_strncmp(av[1], "here_doc", ft_strlen("here_doc"))))
+// 	// 	heredoc_(ac, av, envp);
+// 	array = handling_multiple_pipes(av);
+// 	arr[2] = 0;
+// 	while (arr[2] < sep_len(av))
+// 	{
+// 		if (pipe(array[(arr[2])++]) == -1)
+// 			exit(1);
+// 	}
+// 	checking_if_pipe_exists(ac, av,envp, array, arr);
 	
-	// f1 = bonus_child_fork_1(ac, av, envp, array);
-	 //fn = while_loop_fork(arr, av, envp, array);
-	// f2 = bonus_child_fork_2(arr, av, envp, array);
-	// closing_pipes(ac, array);
-	//waitpid(fn, NULL, 0);
+// 	// f1 = bonus_child_fork_1(ac, av, envp, array);
+// 	 //fn = while_loop_fork(arr, av, envp, array);
+// 	// f2 = bonus_child_fork_2(arr, av, envp, array);
+// 	// closing_pipes(ac, array);
+// 	//waitpid(fn, NULL, 0);
 	
 	
-}
+// }
