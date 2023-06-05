@@ -14,40 +14,33 @@ void echo_function(char **av, int fd)
             return;
         if (ft_strlen(av[i]) && !ft_strncmp(av[i], x, ft_strlen(x)))
         {
-            if (av[i + 1][0] == '-')
+            i++;
+            while (av[i][0] == '-' && av[i][1] == 'n')
             {
-                if (av[i + 1][1] == 'n')
+                j = 1;
+                while (av[i][j] == 'n')
                 {
-                    j = 1;
-                    while (av[i + 1][j] == 'n')
-                    {
-                        j++;
-                    }
-                    if (!av[i + 1][j])
-                    {
-                        new_line_flag = 1;
-                        i++;
-                    }
-                    else if (av[i + 1][j] == ' ')
-                    {
-                        new_line_flag = 0;
-                        break;
-                    }
+                    j++;
                 }
+                if (av[i][j] && av[i][j] != 'n')
+                    break;
+                if (!av[i][j])
+                {
+                    new_line_flag = 1;
+                }
+                i++;
             }
             while (av[i])
             {
-                if ((av[i][0] == '|' && !av[i][1]) || (av[i + 1][0] == '|' && !av[i + 1][1]))
+                if ((av[i][0] == '|' && !av[i][1]))
                 {
-                    break;
+                    return ;
                 }
-
                 if (fd == -99)
                     fd = 1;
-                write(fd, av[i + 1], ft_strlen(av[i + 1]));
-                if (!av[i + 2] || (av[i + 2][0] == '|' && !av[i + 2][1]))
-                    break;
-                write(fd, " ", 1);
+                write(fd, av[i], ft_strlen(av[i]));
+                if(av[i+1])
+                    write(fd, " ", 1);
                 i++;
             }
             if (!new_line_flag)
@@ -57,11 +50,7 @@ void echo_function(char **av, int fd)
     }
 }
 
-
-
-
-
-int main(int ac, char **av)
-{
-    echo_function(av, -99);
-}
+// int main(int ac, char **av)
+// {
+//     echo_function(av, -99);
+// }
