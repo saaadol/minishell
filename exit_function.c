@@ -76,7 +76,7 @@ void exit_function(char **av)
     
 }
 
-int main(int ac, char **av)
-{
-    exit_function(av);
-}
+// int main(int ac, char **av)
+// {
+//     exit_function(av);
+// }

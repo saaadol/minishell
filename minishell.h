@@ -11,13 +11,9 @@
 
 
 
-typedef struct t_list{
-	char			*string;
-	struct t_list	*next;
-}	t_list;
 
 
-void adding_node(t_list **arg);
+//void adding_node(t_list **arg);
 char *ft_strndup(char *str, int start, int end);
 char	**ft_split(char const *s, char c);
 int is_alpha_numeric(char x);
@@ -27,7 +23,7 @@ int is_separator(char x);
 char *ft_strtrim(char  *word, char  *delimiter);
 char    *ft_strcpy(char *s1, char *s2);
 int	ft_strncmp(char *s1, char *s2, size_t n);
-void print_nodes(t_list *arg);
+//void print_nodes(t_list *arg);
 int is_special_char(char x);
 void	executing_funcs(int ac, char **av, char *envp[]);
 void exec_command(char *envp[], char **command, char *x, int ac, char **av);

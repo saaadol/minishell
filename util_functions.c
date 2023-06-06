@@ -117,12 +117,12 @@ int is_special_char(char x)
 	return 0;
 }
 
-void print_nodes(t_list *arg)
-{
-    t_list *current = arg;
-    while (current != NULL)
-    {
-        printf("%s\n", current->string);
-        current = current->next;
-    }
-}
+// void print_nodes(t_list *arg)
+// {
+//     t_list *current = arg;
+//     while (current != NULL)
+//     {
+//         printf("%s\n", current->string);
+//         current = current->next;
+//     }
+// }

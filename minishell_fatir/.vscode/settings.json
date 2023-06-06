@@ -1,0 +1,10 @@
+{
+	"C_Cpp.errorSquiggles": "disabled",
+	"files.associations": {
+		"sstream": "c",
+		"cstdlib": "c",
+		"history.h": "c",
+		"unistd.h": "c",
+		"dirent.h": "c"
+	}
+}

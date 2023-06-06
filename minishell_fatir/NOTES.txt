@@ -1,0 +1,2 @@
+cat Makefile > saad | wc -l < saad
+cat Makefile > saad > alpha | < alpha wc -l

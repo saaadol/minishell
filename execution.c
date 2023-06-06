@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "minishell_fatir/minishell.h"
 char	*located_path_return(char *envp[])
 {
 	int		i;
@@ -78,6 +78,7 @@ char	*ft_join(char *s1, char *s2)
 }
 char	*checking_path(char *envp[], char *comm)
 {
+	
 	int		i;
 	char	*located_path;
 	char	**str;
